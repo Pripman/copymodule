@@ -5,10 +5,8 @@ import logging
 from flask import Flask, request
 
 # Our libraries
-import bptemplate
-import controller 
 import copyingModule
-from fesse import routelog
+from hest.decorators import routelog
 
 
 log = logging.getLogger()
@@ -35,12 +33,11 @@ def test():
     return it()
     return "Hello " + request.remote_addr
 
-app.register_blueprint(bptemplate.bp)
-app.register_blueprint(controller.bp)
 app.register_blueprint(copyingModule.bp)
+
 def main():
     app.debug = True
-    app.run("0.0.0.0", port = 5009)
+    app.run("0.0.0.0", port = 5010)
 
 if __name__ == "__main__":
     main()
