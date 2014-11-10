@@ -2,7 +2,6 @@
 import logging
 import thread
 import uuid
-import socket
 from subprocess import call
 from os import path
 
@@ -23,35 +22,37 @@ img_path = "/samba/allaccess/VMimages/"
 
 #functions
 
-def create_new_domain_xml(motherid, newid): 
+
+def create_new_domain_xml(motherid, newid):
     img = img_path + newid + ".img"
     try:
-        newxml = render_template(motherid, 
-                                    name = newid,
-                                    uuid = newid,
-                                    img = img)
-    except: 
+        newxml = render_template(
+            motherid,
+            name=newid,
+            uuid=newid,
+            img=img)
+    except:
         raise NoOriginalTemplateException("No template with requested id")
 
+    log.info("The xml for the Domain  with id" + newid + " is " + newxml)
+    return newxml
 
-    log.info("The xml for the Domain  with id" + newid+ " is " + newxml)
-    return newxml  
 
 def clone_image(original_img_path, newid):
-    imgexists = path.isfile(original_img_path)  
+    imgexists = path.isfile(original_img_path)
     if imgexists:
         thread.start_new_thread(_startcloning, (original_img_path, newid))
-    else: 
-        raise NoOriginalImageException("Image does not exist in the requested path")
+    else:
+        raise NoOriginalImageException("requested image does not exist")
+
 
 def _startcloning(original_img_path, newid):
     new_img_path = img_path + newid + ".img"
     call(["cp", original_img_path, new_img_path])
 
 
-
 # API calls
-@bp.route("/copyingmodule/<motherid>/create", methods = ["POST"])
+@bp.route("/copyingmodule/<motherid>/create", methods=["POST"])
 @routelog
 @requireformdata(["ORIGINAL_IMG_PATH"])
 def startdomain(ORIGINAL_IMG_PATH, motherid):
@@ -59,18 +60,21 @@ def startdomain(ORIGINAL_IMG_PATH, motherid):
     try:
         new_xml = create_new_domain_xml(motherid,  newid)
     except NoOriginalTemplateException:
-        return encode({"Exception": "No template with the requested id", "Statuscode": 503})
+        return encode(
+            {"Exception": "No template with requested id", "Statuscode": 503})
 
     try:
-        clone_image(ORIGINAL_IMG_PATH, newid) 
+        clone_image(ORIGINAL_IMG_PATH, newid)
     except NoOriginalImageException:
-        return encode({"Exception": "requested original image does not exist", "Statuscode": 503})
+        return encode(
+            {"Exception": "requested image does not exist", "Statuscode": 503})
 
-    return encode ({"Xml": new_xml, "Status": 200, "ID": newid})
+    return encode({"Xml": new_xml, "Status": 200, "ID": newid})
 
 
 class NoOriginalImageException(Exception):
     pass
+
 
 class NoOriginalTemplateException(Exception):
     pass
