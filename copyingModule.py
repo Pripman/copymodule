@@ -8,10 +8,9 @@ from os import path
 # Third party libraries
 from flask import Blueprint, render_template
 import libvirt
-
-# Our libraries
 from hest.decorators import routelog, requireformdata
 from hest.util import encode
+
 
 log = logging.getLogger("CopyingModuleTemplate")
 bp = Blueprint("CopyingModule", __name__)
@@ -24,34 +23,37 @@ img_path = "/samba/allaccess/VMimages/"
 
 
 def create_new_domain_xml(motherid, newid):
+    #TODO:Lav os join path
     img = img_path + newid + ".img"
-    try:
+    if not path.isfile("templates/" + motherid):
+        raise NoOriginalTemplateError("No template with requested id")
+    else:
         newxml = render_template(
             motherid,
             name=newid,
             uuid=newid,
             img=img)
-    except:
-        raise NoOriginalTemplateException("No template with requested id")
 
-    log.info("The xml for the Domain  with id" + newid + " is " + newxml)
-    return newxml
+        log.info("The xml for the Domain  with id" + newid + " is " + newxml)
+        return newxml
 
 
 def clone_image(original_img_path, newid):
-    imgexists = path.isfile(original_img_path)
-    if imgexists:
+    if path.isfile(original_img_path):
+        #TODO: Lav Popen i stedet for ny traad
         thread.start_new_thread(_startcloning, (original_img_path, newid))
     else:
-        raise NoOriginalImageException("requested image does not exist")
+        raise NoOriginalImageError("requested image does not exist")
 
 
 def _startcloning(original_img_path, newid):
+    #TODO:Lav os path join
     new_img_path = img_path + newid + ".img"
     call(["cp", original_img_path, new_img_path])
 
 
 # API calls
+#TODO:Lav til copy service i adressen
 @bp.route("/copyingmodule/<motherid>/create", methods=["POST"])
 @routelog
 @requireformdata(["ORIGINAL_IMG_PATH"])
@@ -59,22 +61,28 @@ def startdomain(ORIGINAL_IMG_PATH, motherid):
     newid = str(uuid.uuid1())
     try:
         new_xml = create_new_domain_xml(motherid,  newid)
-    except NoOriginalTemplateException:
+    except NoOriginalTemplateError:
         return encode(
-            {"Exception": "No template with requested id", "Statuscode": 503})
+            {
+                "Exception": "No template with requested id",
+                "Statuscode": 503
+            })
 
     try:
         clone_image(ORIGINAL_IMG_PATH, newid)
-    except NoOriginalImageException:
+    except NoOriginalImageError:
         return encode(
-            {"Exception": "requested image does not exist", "Statuscode": 503})
+            {
+                "Exception": "requested image does not exist",
+                "Statuscode": 503
+            })
 
     return encode({"Xml": new_xml, "Status": 200, "ID": newid})
 
 
-class NoOriginalImageException(Exception):
+class NoOriginalImageError(Exception):
     pass
 
 
-class NoOriginalTemplateException(Exception):
+class NoOriginalTemplateError(Exception):
     pass
