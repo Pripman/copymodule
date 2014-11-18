@@ -39,16 +39,17 @@ def create_new_domain_xml(motherid, newid):
 
 
 def clone_image(original_img_path, newid):
+    new_path = img_path + newid + ".img"
     if path.isfile(original_img_path):
         #TODO: Lav Popen i stedet for ny traad
-        thread.start_new_thread(_startcloning, (original_img_path, newid))
+        thread.start_new_thread(_startcloning, (original_img_path, new_path))
     else:
         raise NoOriginalImageError("requested image does not exist")
+    return new_path
 
 
-def _startcloning(original_img_path, newid):
+def _startcloning(original_img_path, new_img_path):
     #TODO:Lav os path join
-    new_img_path = img_path + newid + ".img"
     call(["cp", original_img_path, new_img_path])
 
 
@@ -69,7 +70,7 @@ def startdomain(ORIGINAL_IMG_PATH, motherid):
             })
 
     try:
-        clone_image(ORIGINAL_IMG_PATH, newid)
+        new_img_path = clone_image(ORIGINAL_IMG_PATH, newid)
     except NoOriginalImageError:
         return encode(
             {
@@ -77,7 +78,11 @@ def startdomain(ORIGINAL_IMG_PATH, motherid):
                 "Statuscode": 503
             })
 
-    return encode({"Xml": new_xml, "Status": 200, "ID": newid})
+    return encode({
+        "Xml": new_xml,
+        "newpath": new_img_path,
+        "Status": 200,
+        "ID": newid})
 
 
 class NoOriginalImageError(Exception):
