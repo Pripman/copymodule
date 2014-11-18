@@ -23,8 +23,7 @@ img_path = "/samba/allaccess/VMimages/"
 
 
 def create_new_domain_xml(motherid, newid):
-    #TODO:Lav os join path
-    img = img_path + newid + ".img"
+    img = path.join(img_path, newid) + ".img"
     if not path.isfile("templates/" + motherid):
         raise NoOriginalTemplateError("No template with requested id")
     else:
@@ -39,7 +38,7 @@ def create_new_domain_xml(motherid, newid):
 
 
 def clone_image(original_img_path, newid):
-    new_path = img_path + newid + ".img"
+    new_path = path.join(img_path, newid) + ".img"
     if path.isfile(original_img_path):
         #TODO: Lav Popen i stedet for ny traad
         thread.start_new_thread(_startcloning, (original_img_path, new_path))
@@ -49,13 +48,11 @@ def clone_image(original_img_path, newid):
 
 
 def _startcloning(original_img_path, new_img_path):
-    #TODO:Lav os path join
     call(["cp", original_img_path, new_img_path])
 
 
 # API calls
-#TODO:Lav til copy service i adressen
-@bp.route("/copyingmodule/<motherid>/create", methods=["POST"])
+@bp.route("/copyservice/<motherid>/create", methods=["POST"])
 @routelog
 @requireformdata(["ORIGINAL_IMG_PATH"])
 def startdomain(ORIGINAL_IMG_PATH, motherid):
