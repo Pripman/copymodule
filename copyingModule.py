@@ -6,7 +6,7 @@ from subprocess import call
 from os import path
 
 # Third party libraries
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template_string
 import libvirt
 from hest.decorators import routelog, requireformdata
 from hest.util import encode
@@ -22,19 +22,18 @@ img_path = "/samba/allaccess/VMimages/"
 #functions
 
 
-def create_new_domain_xml(motherid, newid):
+def create_new_domain_xml(template, motherid, newid):
     img = path.join(img_path, newid) + ".img"
-    if not path.isfile("templates/" + motherid):
-        raise NoOriginalTemplateError("No template with requested id")
-    else:
-        newxml = render_template(
-            motherid,
+    try:
+        newxml = render_template_string(
+            template,
             name=newid,
             uuid=newid,
             img=img)
-
-        log.info("The xml for the Domain  with id" + newid + " is " + newxml)
-        return newxml
+    except:
+        raise FailedToLoadTemplateError("There was an error loading template")
+        log.info("copyingModule.create_new_domain_xml: created :\n " + newxml)
+    return newxml
 
 
 def clone_image(original_img_path, newid):
@@ -55,15 +54,16 @@ def _startcloning(original_img_path, new_img_path):
 @bp.route("/copyservice/<motherid>/create", methods=["POST"])
 @routelog
 @requireformdata(["ORIGINAL_IMG_PATH"])
-def startdomain(ORIGINAL_IMG_PATH, motherid):
+@requireformdata(["TEMPLATE"])
+def startdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
     newid = str(uuid.uuid1())
     try:
-        new_xml = create_new_domain_xml(motherid,  newid)
-    except NoOriginalTemplateError:
+        new_xml = create_new_domain_xml(TEMPLATE, motherid,  newid)
+    except FailedToLoadTemplateError:
         return encode(
             {
                 "Exception": "No template with requested id",
-                "Statuscode": 503
+                "Status": 503
             })
 
     try:
@@ -72,7 +72,7 @@ def startdomain(ORIGINAL_IMG_PATH, motherid):
         return encode(
             {
                 "Exception": "requested image does not exist",
-                "Statuscode": 503
+                "Status": 503
             })
 
     return encode({
@@ -86,5 +86,5 @@ class NoOriginalImageError(Exception):
     pass
 
 
-class NoOriginalTemplateError(Exception):
+class FailedToLoadTemplateError(Exception):
     pass
