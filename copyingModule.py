@@ -4,6 +4,7 @@ import thread
 import uuid
 from subprocess import call
 from os import path
+import xml.etree.ElementTree as ET
 
 # Third party libraries
 from flask import Blueprint, render_template_string
@@ -38,6 +39,7 @@ def create_new_domain_xml(template, motherid, newid):
 
 def clone_image(original_img_path, newid):
     new_path = path.join(img_path, newid) + ".img"
+    log.info("Trying to clone image: " + original_img_path)
     if path.isfile(original_img_path):
         #TODO: Lav Popen i stedet for ny traad
         thread.start_new_thread(_startcloning, (original_img_path, new_path))
@@ -48,6 +50,19 @@ def clone_image(original_img_path, newid):
 
 def _startcloning(original_img_path, new_img_path):
     call(["cp", original_img_path, new_img_path])
+
+
+def create_new_domain_template(xml):
+    try:
+        tree = ET.fromstring(xml)
+        tree.find('name').text = "{{ name }}"
+        tree.find('uuid').text = "{{ uuid }}"
+        tree.find('devices/disk/source').set('file', '{{ img }}')
+    except:
+        raise FailedToCreateTemplateError(
+            "There was an error in creating the template")
+
+    return ET.tostring(tree)
 
 
 # API calls
@@ -82,9 +97,54 @@ def startdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
         "ID": newid})
 
 
+@bp.route("/copyservice/<motherid>/createsharedomain", methods=["POST"])
+@routelog
+@requireformdata(["ORIGINAL_IMG_PATH"])
+@requireformdata(["XML"])
+def createsharedom(motherid, ORIGINAL_IMG_PATH, XML):
+    newid = str(uuid.uuid1())
+    try:
+        new_template = create_new_domain_template(XML)
+    except FailedToCreateTemplateError:
+        return encode(
+            {
+                "Exception": "Error creating template",
+                "Status": 503
+            })
+
+    try:
+        log.info("Trying to clone image: " + ORIGINAL_IMG_PATH)
+        new_img_path = clone_image(ORIGINAL_IMG_PATH, newid)
+    except NoOriginalImageError:
+        return encode(
+            {
+                "Exception": "requested image does not exist",
+                "Status": 503
+            })
+
+    return encode({
+        "TEMPLATE": new_template,
+        "newpath": new_img_path,
+        "Status": 200,
+        "ID": newid})
+
+
 class NoOriginalImageError(Exception):
     pass
 
 
 class FailedToLoadTemplateError(Exception):
     pass
+
+
+class FailedToCreateTemplateError(Exception):
+    pass
+
+
+if __name__ == "__main__":
+    with open("/samba/allaccess/ConfigFiles/workingconfig_usernetwork.xml", 'r') as xml:
+        data = xml.read().replace('\n', '')
+
+    template = create_new_domain_template(data)
+    print(template)
+
