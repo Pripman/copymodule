@@ -123,7 +123,7 @@ def createsharedom(motherid, ORIGINAL_IMG_PATH, XML):
             })
 
     return encode({
-        "TEMPLATE": new_template,
+        "Template": new_template,
         "newpath": new_img_path,
         "Status": 200,
         "ID": newid})
