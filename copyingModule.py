@@ -18,7 +18,7 @@ bp = Blueprint("CopyingModule", __name__)
 
 #global variables
 hypervisor = libvirt.open("qemu:///system")
-img_path = "/samba/allaccess/VMimages/"
+img_path = "/home/user/"
 
 #functions
 
@@ -44,6 +44,7 @@ def clone_image(original_img_path, newid):
         #TODO: Lav Popen i stedet for ny traad
         thread.start_new_thread(_startcloning, (original_img_path, new_path))
     else:
+	log.info("There was an exception trying to find image")
         raise NoOriginalImageError("requested image does not exist")
     return new_path
 
@@ -71,6 +72,7 @@ def create_new_domain_template(xml):
 @requireformdata(["ORIGINAL_IMG_PATH"])
 @requireformdata(["TEMPLATE"])
 def startdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
+    orgpath = path.join(img_path, motherid + ".img")
     newid = str(uuid.uuid1())
     try:
         new_xml = create_new_domain_xml(TEMPLATE, motherid,  newid)
@@ -82,7 +84,7 @@ def startdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
             })
 
     try:
-        new_img_path = clone_image(ORIGINAL_IMG_PATH, newid)
+        new_img_path = clone_image(orgpath, newid)
     except NoOriginalImageError:
         return encode(
             {
@@ -102,6 +104,7 @@ def startdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
 @requireformdata(["ORIGINAL_IMG_PATH"])
 @requireformdata(["XML"])
 def createsharedom(motherid, ORIGINAL_IMG_PATH, XML):
+    orgpath = path.join(img_path, motherid + ".img")
     newid = str(uuid.uuid1())
     try:
         new_template = create_new_domain_template(XML)
@@ -113,8 +116,9 @@ def createsharedom(motherid, ORIGINAL_IMG_PATH, XML):
             })
 
     try:
-        log.info("Trying to clone image: " + ORIGINAL_IMG_PATH)
-        new_img_path = clone_image(ORIGINAL_IMG_PATH, newid)
+        log.info("Trying to clone image: " + orgpath)
+        new_img_path = clone_image(orgpath, newid)
+	log.info("The new img path ")
     except NoOriginalImageError:
         return encode(
             {
