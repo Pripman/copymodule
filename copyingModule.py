@@ -18,7 +18,7 @@ bp = Blueprint("CopyingModule", __name__)
 
 #global variables
 hypervisor = libvirt.open("qemu:///system")
-img_path = "/home/user/"
+img_path = "/home/user/imagesstorages"
 
 #functions
 
