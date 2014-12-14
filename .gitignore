@@ -1,1 +1,5 @@
 *.pyc
+.doit.db
+.fuse*
+._*
+.DS*
