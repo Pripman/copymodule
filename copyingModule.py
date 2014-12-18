@@ -8,7 +8,6 @@ import xml.etree.ElementTree as ET
 
 # Third party libraries
 from flask import Blueprint, render_template_string
-import libvirt
 from fest.decorators import routelog, requireformdata
 from fest.util import encode
 
@@ -17,7 +16,6 @@ log = logging.getLogger("CopyingModuleTemplate")
 bp = Blueprint("CopyingModule", __name__)
 
 #global variables
-hypervisor = libvirt.open("qemu:///system")
 controller_img_path = "/home/user/runningimages"
 img_path = "/home/user/imagesstorages"
 
