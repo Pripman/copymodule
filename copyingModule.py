@@ -18,13 +18,14 @@ bp = Blueprint("CopyingModule", __name__)
 
 #global variables
 hypervisor = libvirt.open("qemu:///system")
+controller_img_path = "/home/user/runningimages"
 img_path = "/home/user/imagesstorages"
 
 #functions
 
 
 def create_new_domain_xml(template, motherid, newid):
-    img = path.join(img_path, newid) + ".img"
+    img = path.join(controller_img_path, newid) + ".img"
     try:
         newxml = render_template_string(
             template,
