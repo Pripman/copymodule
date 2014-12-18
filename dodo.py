@@ -6,7 +6,7 @@
 def task_installs():
     return {
         'actions': ["bash installs"],
-        'file_dep': ["aptinstalls"],
+        'file_dep': ["installs"],
         'verbosity': 2
     }
 
