@@ -9,8 +9,8 @@ import xml.etree.ElementTree as ET
 # Third party libraries
 from flask import Blueprint, render_template_string
 import libvirt
-from hest.decorators import routelog, requireformdata
-from hest.util import encode
+from fest.decorators import routelog, requireformdata
+from fest.util import encode
 
 
 log = logging.getLogger("CopyingModuleTemplate")

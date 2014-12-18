@@ -10,7 +10,7 @@ def task_installs():
         'verbosity': 2
     }
 
- def task_rundebug():
+def task_rundebug():
     return {
         "actions": ["python main.py", ],
         "verbosity": 2
