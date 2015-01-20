@@ -3,9 +3,15 @@
 # Standard libraries
 
 
-def task_aptinstaller():
+def task_installs():
     return {
-        'actions': ["bash aptinstalls"],
-        'file_dep': ["aptinstalls"],
+        'actions': ["bash installs"],
+        'file_dep': ["installs"],
         'verbosity': 2
+    }
+
+def task_rundebug():
+    return {
+        "actions": ["python main.py", ],
+        "verbosity": 2
     }

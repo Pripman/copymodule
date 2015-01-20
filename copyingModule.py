@@ -19,7 +19,7 @@ bp = Blueprint("CopyingModule", __name__)
 #global variables
 hypervisor = libvirt.open("qemu:///system")
 userdir = path.expanduser("~")
-img_path = "{}/imagesstorages".format(userdir)
+img_path = "{}/UniMachine/imagesstorages".format(userdir)
 
 #functions
 
@@ -72,7 +72,7 @@ def create_new_domain_template(xml):
 @routelog
 @requireformdata(["ORIGINAL_IMG_PATH"])
 @requireformdata(["TEMPLATE"])
-def startdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
+def createdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
     orgpath = path.join(img_path, motherid + ".img")
     newid = str(uuid.uuid1())
     try:
@@ -104,7 +104,7 @@ def startdomain(ORIGINAL_IMG_PATH, motherid, TEMPLATE):
 @routelog
 @requireformdata(["ORIGINAL_IMG_PATH"])
 @requireformdata(["XML"])
-def createsharedom(motherid, ORIGINAL_IMG_PATH, XML):
+def createsharedomain(motherid, ORIGINAL_IMG_PATH, XML):
     orgpath = path.join(img_path, motherid + ".img")
     newid = str(uuid.uuid1())
     try:
